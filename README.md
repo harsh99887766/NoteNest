@@ -1,4 +1,4 @@
-# Notlify - Your Daily Notes Platform
+# NoteNest - Your Daily Notes Platform
 
 A modern, minimalist platform for writing and organizing daily notes with markdown support, tagging, and public/private visibility.
 
