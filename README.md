@@ -33,8 +33,13 @@ A modern, minimalist platform for writing and organizing daily notes with markdo
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
-   cd Notlify
+   # HTTPS
+   git clone https://github.com/YOUR_USERNAME/notenest.git
+   cd notenest
+
+   # or SSH
+   git clone git@github.com:YOUR_USERNAME/notenest.git
+   cd notenest
    ```
 
 2. **Install dependencies**
@@ -43,16 +48,21 @@ A modern, minimalist platform for writing and organizing daily notes with markdo
    ```
 
 3. **Set up environment variables**
-   
-   Create a `.env.local` file in the root directory:
+
+   Create a `.env.local` file in the root directory from the example (the repo includes a template without secrets):
    ```bash
    cp .env.example .env.local
    ```
 
-   Update the following variables:
-   - `DATABASE_URL`: Your PostgreSQL connection string
-   - `NEXTAUTH_SECRET`: Generate with `openssl rand -base64 32`
-   - `NEXTAUTH_URL`: Your app URL (http://localhost:3000 for local)
+   Update the following variables in `.env.local` (do NOT commit this file):
+   - `DATABASE_URL`: Your PostgreSQL connection string (keep the full connection string)
+   - `NEXTAUTH_SECRET`: Generate a secure secret locally:
+     ```bash
+     node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+     ```
+   - `NEXTAUTH_URL`: Your app URL (use `http://localhost:3000` for local development)
+
+   Security note: **Do not commit `.env.local` or any secrets to the repository.** Keep secrets only in `.env.local` locally and configure production secrets in your hosting provider (Vercel) instead.
 
 4. **Set up the database**
    ```bash
@@ -87,11 +97,18 @@ A modern, minimalist platform for writing and organizing daily notes with markdo
    - Vercel will auto-detect Next.js settings
 
 3. **Configure Environment Variables**
-   
-   In Vercel project settings, add:
-   - `DATABASE_URL`: Your production PostgreSQL URL (use Vercel Postgres or Supabase)
-   - `NEXTAUTH_SECRET`: Generate a new secret for production
-   - `NEXTAUTH_URL`: Your Vercel deployment URL
+
+   In Vercel project settings, add the production values (use the raw values — do not include surrounding quotes):
+   - `DATABASE_URL`: Your production PostgreSQL URL (Neon, Vercel Postgres, Supabase, etc.)
+   - `NEXTAUTH_SECRET`: Use a newly generated secret (same method as above)
+   - `NEXTAUTH_URL`: Your Vercel deployment URL (see note below)
+
+   Important: Vercel expects raw values without surrounding double quotes. Example:
+   ```text
+   DATABASE_URL=postgresql://user:password@host:5432/dbname?sslmode=require&channel_binding=require
+   ```
+
+   After the first deploy Vercel gives your project a final domain (for example `https://note-nest-neon-eight.vercel.app`). Update `NEXTAUTH_URL` to that exact domain in Vercel and then redeploy your project so authentication callbacks work correctly.
 
 4. **Set up Vercel Postgres (Optional)**
    - In Vercel project, go to Storage tab
@@ -100,7 +117,9 @@ A modern, minimalist platform for writing and organizing daily notes with markdo
 
 5. **Deploy**
    - Vercel will automatically build and deploy
-   - Future pushes to main branch will trigger auto-deploys
+   - Future pushes to `main` will trigger auto-deploys
+
+   Live demo: https://note-nest-neon-eight.vercel.app (your current deployment)
 
 ### Manual Deployment
 
@@ -115,7 +134,7 @@ Follow the prompts to deploy.
 ## Project Structure
 
 ```
-Notlify/
+notenest/
 ├── app/                    # Next.js app directory
 │   ├── (auth)/            # Authentication pages
 │   ├── (main)/            # Protected pages with layout
@@ -193,9 +212,19 @@ npx prisma migrate deploy
 
 ### Database Connection Issues
 
-- Verify `DATABASE_URL` is correct
-- Ensure PostgreSQL is running
-- Check firewall settings for remote databases
+ - Verify `DATABASE_URL` is correct
+ - Ensure PostgreSQL is running
+ - Check firewall settings for remote databases
+
+Additional checks for hosted deployments
+- In Vercel: verify `DATABASE_URL` contains the real host (not a placeholder) and that the value has no surrounding quotes.
+- After updating Vercel envs, **redeploy** and then check the deployment logs (Project → Deployments → open deployment → Logs) for any runtime errors
+- Use this curl test to exercise the registration endpoint and see the HTTP response:
+```bash
+curl -i -X POST https://note-nest-neon-eight.vercel.app/api/register \
+   -H "Content-Type: application/json" \
+   -d '{"email":"test@example.com","password":"password123","name":"Test"}'
+```
 
 ### Authentication Issues
 
